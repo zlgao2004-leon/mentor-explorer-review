@@ -16,5 +16,5 @@ window.ReviewDemo.ready.then(()=>{
   document.querySelector('#mail-history').hidden=true;
   document.querySelector('#draft-recipient').placeholder='此版不发送；导出的演示邮件不预填收件人';
   document.querySelector('#reset-review').onclick=()=>{if(confirm('清除此网站在当前浏览器保存的收藏、联系记录、日程与草稿？此操作不会影响其他设备。'))window.ReviewDemo.reset();};
-  document.querySelectorAll('[data-case]').forEach(b=>b.addEventListener('click',()=>{document.querySelector('#submit').textContent='打开'+(b.dataset.case==='E01'?'NAND':'功放')+'示例结果';}));
+  document.querySelectorAll('[data-case]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-case]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));document.querySelector('#submit').textContent='打开'+(b.dataset.case==='E01'?'NAND':'功放')+'示例结果';}));
 }).catch(e=>{document.querySelector('#review-status').textContent=e.message;});

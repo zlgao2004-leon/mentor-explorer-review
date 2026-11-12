@@ -10,9 +10,13 @@ window.ReviewDemo = (() => {
   const uid=()=>crypto.randomUUID().replaceAll('-','').slice(0,16);
   function save(){try{localStorage.setItem(STORAGE,JSON.stringify(db));}catch{throw Error('浏览器无法保存记录，请允许本站本地存储，或导出当前草稿后再试。');}}
   function date(value){if(value&&!/^\d{4}-\d{2}-\d{2}$/.test(value))throw Error('日期格式无效。');return value||'';}
-  function session(data,id){if(!data.cases[id])throw Error('请先选择 NAND 或功放示例。');if(!db.sessions[id])db.sessions[id]={batches:[data.cases[id].first]};return db.sessions[id];}
+  function session(data,id){const c=data.cases[id];if(!c)throw Error('请先选择 NAND 或功放示例。');
+    if(!db.sessions[id])db.sessions[id]={batches:[c.first],selection_version:c.selection_version};
+    const s=db.sessions[id];if(s.selection_version!==c.selection_version){const count=Math.max(1,Math.min(4,s.batches.length));s.batches=[c.first];for(let i=1;i<count;i++){const seen=new Set(s.batches.flat());s.batches.push(unique(c,c.rank.filter(t=>!seen.has(t))));}s.selection_version=c.selection_version;save();}return s;}
+
   function teacher(data,id,tid){const c=data.cases[id]?.cards[tid];if(!c)throw Error('本分享版没有这位导师的已复核卡片。');return c;}
-  function unique(c,ids){const picked=[],used=new Set();for(const tid of ids){const d=c.cards[tid].decision,keys=[...new Set(d.direct_evidence?.length?d.direct_evidence:d.bridge.map(b=>b.paper_key))];if(keys.length===1&&used.has(keys[0]))continue;if(keys.length===1)used.add(keys[0]);picked.push(tid);if(picked.length===5)break;}return picked;}
+  function unique(c,ids){const picked=[];for(const tid of ids){if(picked.some(t=>(c.conflicts?.[tid]||[]).includes(t)))continue;picked.push(tid);if(picked.length===5)break;}return picked;}
+
   const group=c=>c.decision.map_group||c.decision.group_name;
   function visible(data,id,tier='普通'){
     const c=data.cases[id],s=session(data,id),max=tier==='会员'?4:1,batches=s.batches.slice(0,max),seen=new Set(batches.flat());
@@ -31,7 +35,7 @@ window.ReviewDemo = (() => {
       if(!key)throw Error('在线审阅版不运行新背景匹配。请用上方按钮重新选择一个示例。');
       const schools=data.cases[key].profile.target_schools;
       if(schools.length!==input.target_schools.length||schools.some(x=>!input.target_schools.includes(x)))throw Error('示例学校已固定。请重新选择示例恢复学校范围。');
-      db.sessions[key]={batches:[data.cases[key].first]};save();return {status:'done',session:key};
+      db.sessions[key]={batches:[data.cases[key].first],selection_version:data.cases[key].selection_version};save();return {status:'done',session:key};
     }
     if(p==='/api/session')return visible(data,id,q.get('tier'));
     if(p==='/api/next'){
