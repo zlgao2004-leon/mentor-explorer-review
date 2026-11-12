@@ -1,0 +1,20 @@
+'use strict';
+window.ReviewDemo.ready.then(()=>{
+  const schoolBox=document.querySelector('#school-options');
+  const lockSchools=()=>schoolBox.querySelectorAll('input').forEach(e=>e.disabled=true);
+  lockSchools();new MutationObserver(lockSchools).observe(schoolBox,{childList:true});
+  document.querySelectorAll('.preferences input,.preferences select').forEach(e=>e.disabled=true);
+  document.querySelector('.preferences .caption').textContent='此示例的学校和偏好固定；院系筛选与新背景重新匹配须使用完整后台。';
+  document.querySelector('.resume-upload .caption').textContent='可体验PDF或Word文字提取，8MB以内。仅在浏览器处理，请用虚构材料；此版不据此重新匹配。';
+  document.querySelector('#apply-resume').textContent='预览完成（此版不重新匹配）';
+  document.querySelector('#apply-resume').onclick=()=>{document.querySelector('#resume-status').textContent='提取预览已保留。两个示例的背景固定，未用简历内容重新匹配。';};
+  document.querySelector('#fictional').disabled=true;
+  document.querySelector('.mail-settings summary').textContent='邮件功能在此版的范围';
+  document.querySelector('#mail-config').hidden=true;
+  document.querySelector('.mail-actions').hidden=true;
+  document.querySelectorAll('.mail-settings input,.mail-settings button').forEach(e=>e.disabled=true);
+  document.querySelector('#mail-history').hidden=true;
+  document.querySelector('#draft-recipient').placeholder='此版不发送；导出的演示邮件不预填收件人';
+  document.querySelector('#reset-review').onclick=()=>{if(confirm('清除此网站在当前浏览器保存的收藏、联系记录、日程与草稿？此操作不会影响其他设备。'))window.ReviewDemo.reset();};
+  document.querySelectorAll('[data-case]').forEach(b=>b.addEventListener('click',()=>{document.querySelector('#submit').textContent='打开'+(b.dataset.case==='E01'?'NAND':'功放')+'示例结果';}));
+}).catch(e=>{document.querySelector('#review-status').textContent=e.message;});

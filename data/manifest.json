@@ -1,0 +1,35 @@
+{
+  "built_at": "2026-11-12T12:57:57+08:00",
+  "timezone": "Asia/Taipei",
+  "model_calls": 0,
+  "cases": {
+    "E01": {
+      "reviewed_cards": 22,
+      "first": [
+        "丁士进",
+        "任堃",
+        "高大为",
+        "唐克超",
+        "张睿"
+      ],
+      "papers": 68,
+      "original_qualified": 53
+    },
+    "E06": {
+      "reviewed_cards": 22,
+      "first": [
+        "张勇",
+        "方中元",
+        "池保勇",
+        "康凯",
+        "陈文华"
+      ],
+      "papers": 76,
+      "original_qualified": 50
+    }
+  },
+  "source_sha256": {
+    "E01": "9e9aec0e82d8cb1997e1c8ca08eec66a629c25d582c2aae73a8f1d3cc3b8cc82",
+    "E06": "4e3c9e1c0b28cc0dcf566a5f3685b15a4f4d06511454a3c520d4594d7cf2e7e7"
+  }
+}

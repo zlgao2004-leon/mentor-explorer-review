@@ -1,0 +1,8 @@
+.review-intro{max-width:960px;margin:0 auto 24px;padding:20px 24px;background:#edf3fa;border-radius:12px;color:#18354f;line-height:1.75}
+.review-intro p{margin:8px 0}.review-intro strong{font-size:17px}.review-intro a{color:#174b8c;text-underline-offset:3px}.review-intro #review-status{display:block}
+textarea[readonly]{background:#f6f8fa;color:#334a60;cursor:default}.preferences :disabled{opacity:.7}
+[hidden]{display:none!important}.intro h1{font-size:clamp(30px,4.3vw,52px)}
+.intro{grid-template-columns:1fr;gap:12px}.intro h1{text-wrap:balance}.intro p{max-width:65ch}
+.resume-upload{margin-top:14px}.resume-upload>summary{cursor:pointer;min-height:44px;padding:10px 0;font-weight:600}
+:focus-visible{outline:3px solid #235ca6;outline-offset:3px}::selection{background:#ccdef4;color:#142f4c}
+@media(max-width:600px){.review-intro{padding:16px}.demo-mark{font-size:12px}.site-header .explore-nav{gap:12px}.example-buttons{gap:10px;flex-wrap:wrap}}
