@@ -10,13 +10,13 @@ const showError=e=>{$('#error').hidden=false;$('#error').textContent=typeof e===
 async function api(path,body){return window.ReviewDemo.api(path,body);}
 function node(tag,text,cls){const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;}
 function link(text,url){const a=node('a',text);try{const u=new URL(url);if(['https:','http:','mailto:'].includes(u.protocol)&&!/(researchgate\.net|aminer\.)/i.test(u.hostname)){a.href=u.href;a.target='_blank';a.rel='noopener noreferrer';}}catch{}return a;}
-function setBusy(value,text=''){busy=value;$('#submit').disabled=value;$('#next').disabled=value||!state?.background_complete;$('#working').hidden=!value;if(text)$('#working-text').textContent=text;}
+function setBusy(value,text=''){busy=value;$('#submit').disabled=value;$('#next').disabled=value||!state?.can_continue;$('#working').hidden=!value;if(text)$('#working-text').textContent=text;}
 function selectedSchools(){return [...document.querySelectorAll('#school-options input:checked')].map(x=>x.value);}
 function syncCaseButtons(){document.querySelectorAll('[data-case]').forEach(b=>b.setAttribute('aria-pressed',String(info.cases[b.dataset.case]?.background===$('#background-text').value)));}
 function fillCase(key,focus=true){const p=info.cases[key];$('#background-text').value=p.background;document.querySelectorAll('#school-options input').forEach(x=>x.checked=p.target_schools.includes(x.value));for(const id of ['college','direct-phd','mentor-preference','direction-preference'])$('#'+id).value='';resumeUsed=false;$('#resume-confirm-wrap').hidden=true;$('#resume-confirm').required=false;if(focus)$('#background-text').focus();$('#background-text').scrollTop=0;syncCaseButtons();}
 async function poll(key){jobId=key;remember();for(;;){await new Promise(r=>setTimeout(r,1200));const p=await api('/api/job?id='+key);$('#working-text').textContent=p.stage+(p.total?`（${p.completed}/${p.total}位）`:'');if(p.status==='error'){jobId=null;if(p.first_ready){sessionId=p.session||key;await loadState();}remember();throw new Error(p.stage);}if(p.status==='done'||p.status==='partial'){sessionId=p.session||key;jobId=null;await loadState();if(p.status==='partial')watchBackground(key);return;}}}
-async function watchBackground(key){if(backgroundPollKey===key)return;backgroundPollKey=key;try{while(sessionId===key){await new Promise(r=>setTimeout(r,3500));const p=await api('/api/job?id='+key);$('#background-progress').hidden=false;$('#background-progress-text').textContent=p.stage+(p.total?`（${p.completed}/${p.total}位）`:'');if(p.status==='error'){$('#resume-job').hidden=false;break;}if(p.status==='done'){await loadState();break;}if(p.status==='partial'){state.judged=p.completed;$('#background-progress-text').textContent=`首批已就绪，其余候选继续核对（${p.completed}/${p.total}位）。`;}}}catch(e){showError(e);}finally{backgroundPollKey=null;}}
-async function loadState(){await Promise.allSettled([...pendingSaves]);state=await api('/api/session?id='+sessionId+'&tier='+encodeURIComponent($('#account').value));if(selectedGroup&&!state.map.some(g=>g.name===selectedGroup&&g.remaining))selectedGroup=null;render();$('#results').hidden=false;remember();window.refreshWorkbench?.();}
+async function watchBackground(key){if(backgroundPollKey===key)return;backgroundPollKey=key;try{while(sessionId===key){await new Promise(r=>setTimeout(r,3500));const p=await api('/api/job?id='+key);if(sessionId!==key)break;if(p.status==='error'||p.status==='done'){await loadState();break;}if(p.status==='partial'&&((p.revision!==undefined&&p.revision!==state.review_revision)||p.completed!==state.judged))await loadState();$('#background-progress').hidden=false;$('#background-progress-text').textContent=p.stage+(p.total?`（${p.completed}/${p.total}位）`:'');}}catch(e){showError(e);}finally{backgroundPollKey=null;}}
+async function loadState(){await Promise.allSettled([...pendingSaves]);const active=document.activeElement,focusId=active?.id,focusTeacher=active?.closest('.match-row')?.id,focusDirection=active?.dataset?.direction;state=await api('/api/session?id='+sessionId+'&tier='+encodeURIComponent($('#account').value));if(selectedGroup&&!state.map.some(g=>g.name===selectedGroup&&g.remaining))selectedGroup=null;render();$('#results').hidden=false;remember();window.refreshWorkbench?.();if(active&&!active.isConnected){if(focusId)document.getElementById(focusId)?.focus({preventScroll:true});else if(focusTeacher)document.getElementById(focusTeacher)?.querySelector('.row-main')?.focus({preventScroll:true});else if(focusDirection)[...document.querySelectorAll('[data-direction]')].find(x=>x.dataset.direction===focusDirection)?.focus({preventScroll:true});}}
 // ---------- 结果渲染：左侧名单可比较，右侧（窄屏为行内）看一位的完整依据 ----------
 let selectedTeacher=null;
 const wide=window.matchMedia('(min-width: 1100px)');
@@ -24,15 +24,16 @@ const FACET={object:'对象',mechanism:'机理',method:'方法'};
 const POSITION={first:'第一作者',last:'末位作者',middle:'中间作者'};
 function shortSchool(s){return (s||'').replace('\u4e2d\u56fd\u79d1\u5b66\u9662\u5927\u5b66','国科大');}
 function tierMark(d){const t=node('span',d.tier,'tier '+(d.tier==='直接同题'?'direct':d.tier==='同机制邻近'?'adjacent':'method'));return t;}
-function matchFacts(d){const wrap=node('span',undefined,'facts');const one=(label,v)=>{const s=node('span',label+(v===true?'一致':v===false?'不同':'未标注'),'fact '+(v===true?'yes':v===false?'no':'na'));return s;};wrap.append(one('对象',d.object_match),one('问题',d.problem_match));return wrap;}
+function matchFacts(d){const wrap=node('span',undefined,'facts');for(const [label,v] of [['对象',d.object_match],['问题',d.problem_match]])if(typeof v==='boolean')wrap.append(node('span',label+(v?'一致':'不同'),'fact '+(v?'yes':'no')));return wrap;}
+function reviewMark(c){const s=c.review_status||(c.decision.reviewed?'complete':'pending');return node('span',s==='complete'?'已复核':s==='failed'?'初判 · 复核未完成':s==='retrying'?'初判 · 复核重试中':'初判 · 复核中','review-mark '+(s==='complete'?'checked':'pending'));}
 function render(){
 $('#explore-empty').hidden=true;
 $('#result-mode').textContent=state.precomputed?'虚构背景，预先运行的示例结果。':'虚构背景，本次输入运行的结果。';
 $('#preference-note').textContent=(state.preferences_note||[]).join(' ');
-$('#background-progress').hidden=state.background_complete;
-$('#background-progress-text').textContent=state.background_error||`首批已就绪，其余候选继续核对（${state.judged}/${state.pool_total}位）。`;
-$('#resume-job').hidden=!state.background_error;
-$('#result-count').textContent=`可浏览 ${state.qualified} 位经模型复核的导师；完整预跑初判 ${state.original_qualified} 位。模型复核不等于人工验收。`;
+$('#background-progress').hidden=state.background_complete&&!state.review_pending;
+$('#background-progress-text').textContent=state.background_error||(state.review_pending?'初判仅供先浏览，复核会逐张更新。全部复核完成后开放下一批、联系信和导出。':`首批已就绪，其余候选继续核对（${state.judged}/${state.pool_total}位）。`);
+$('#resume-job').hidden=!state.background_error||state.resume_allowed===false;
+$('#result-count').textContent=state.review_pending?`当前展示 ${state.cards.length} 位初判候选；已完成复核 ${state.cards.filter(c=>c.review_status==='complete').length} 位。判断可能更新。`:`初判找到 ${state.original_qualified} 位候选，已有 ${state.reviewed_count??state.qualified} 位完成模型复核。模型复核不等于人工验收。`;
 const navCount=$('#nav-explore-count');navCount.hidden=false;navCount.textContent=state.cards.length;
 // 方向
 const map=$('#direction-map');map.replaceChildren();
@@ -45,20 +46,20 @@ for(const group of state.map){const b=node('button',undefined,'direction-option'
 if(!state.map.length)map.append(node('p','本轮没有证据足够的导师。把研究问题写得更具体，再试一次。','empty-state'));
 // 名单
 $('#batch-title').textContent=state.batches>1?`已看 ${state.batches} 批，共 ${state.cards.length} 位`:`第一批，${state.cards.length} 位`;
-$('#batch-note').textContent=`先读清单合并后共 ${state.reading_unique} 篇论文。`;
+$('#batch-note').textContent=`先读清单合并后共 ${state.reading_unique} 篇论文。`+(state.review_changes?.slice(-2).join(' ')||'');
 if(!state.cards.some(c=>c.id===selectedTeacher))selectedTeacher=wide.matches?(state.cards[0]?.id||null):null;
 const list=$('#teacher-cards');list.replaceChildren();let lastBatch=0;
 for(const c of state.cards){if(state.batches>1&&c.batch!==lastBatch){lastBatch=c.batch;list.append(node('p',`第 ${c.batch} 批`,'batch-label'));}list.append(row(c));}
 placeDetail();
-$('#next').hidden=state.background_complete&&!state.can_continue;$('#next').disabled=busy||!state.background_complete;
+$('#next').hidden=!state.review_pending&&state.background_complete&&!state.can_continue;$('#next').disabled=busy||!state.can_continue;
 $('#next').textContent=selectedGroup?`下一批看「${selectedGroup}」`:'再看下一批5位';
-$('#next-note').textContent=$('#account').value==='普通'?'普通档位只看第一批。切到会员演示档位可看到最多4批，不涉及支付。':state.can_continue?'看过的老师不会重复出现。':'已到本档位上限，或合格导师已全部看完。';}
+$('#next-note').textContent=state.review_pending?'等首批全部复核完成后，再探索下一批或准备联系信。':$('#account').value==='普通'?'普通档位只看第一批。切到会员演示档位可看到最多4批，不涉及支付。':state.can_continue?'看过的老师不会重复出现。':'已到本档位上限，或其余候选仍在核对。';}
 function row(c){const d=c.decision,a=node('article',undefined,'match-row');a.id='teacher-'+c.id;a.dataset.selected=String(c.id===selectedTeacher);
   const b=node('button',undefined,'row-main');b.type='button';b.setAttribute('aria-expanded',String(c.id===selectedTeacher));
   const head=node('span',undefined,'row-head');head.append(node('span',c.name,'row-name'),tierMark(d));
   const sub=node('span',`${shortSchool(c.school)}　${c.college||''}`,'row-school');
   const line=node('span',d.bridge[0]?.text||d.reason,'row-line');
-  const foot=node('span',undefined,'row-foot');foot.append(matchFacts(d));if(d.evidence==='单篇')foot.append(node('span','单篇依据','fact warn'));if(c.favorite)foot.append(node('span','已收藏','fact saved'));if(c.contact&&c.contact!=='未联系')foot.append(node('span',c.contact,'fact saved'));
+  const foot=node('span',undefined,'row-foot');foot.append(reviewMark(c),matchFacts(d));if(d.evidence==='单篇')foot.append(node('span','单篇依据','fact warn'));if(c.favorite)foot.append(node('span','已收藏','fact saved'));if(c.contact&&c.contact!=='未联系')foot.append(node('span',c.contact,'fact saved'));
   b.append(head,sub,line,foot);b.onclick=()=>{selectedTeacher=(!wide.matches&&selectedTeacher===c.id)?null:c.id;document.querySelectorAll('.match-row').forEach(r=>{const on=r.id==='teacher-'+selectedTeacher;r.dataset.selected=String(on);r.querySelector('.row-main').setAttribute('aria-expanded',String(on));});placeDetail(true);};
   a.append(b);return a;}
 function placeDetail(scroll){const c=state?.cards.find(x=>x.id===selectedTeacher),pane=$('#teacher-detail');document.querySelectorAll('.row-detail').forEach(x=>x.remove());pane.replaceChildren();if(!c)return;const body=detailFor(c);
@@ -67,6 +68,7 @@ function placeDetail(scroll){const c=state?.cards.find(x=>x.id===selectedTeacher
 wide.addEventListener('change',()=>{if(!state)return;if(wide.matches&&!selectedTeacher)selectedTeacher=state.cards[0]?.id||null;render();});
 function detailFor(c){const d=c.decision,a=node('div',undefined,'detail');
   const head=node('header',undefined,'detail-head'),id=node('div');id.append(node('h3',c.name),node('p',`${c.school}　${c.college||''}`,'detail-school'));head.append(id,tierMark(d));a.append(head);
+  const reviewLine=node('p',undefined,'review-line');reviewLine.append(reviewMark(c));if(c.review_note)reviewLine.append(document.createTextNode(' '+c.review_note));a.append(reviewLine);
   if(c.official_direction){const od=node('p',undefined,'official');od.append(node('span','官网方向　','official-label'),document.createTextNode(c.official_direction));a.append(od);}
   // 动作
   const actions=node('div',undefined,'detail-actions'),save=node('button',c.favorite?'已收藏':'收藏','button '+(c.favorite?'saved':'secondary'));save.type='button';
@@ -74,13 +76,11 @@ function detailFor(c){const d=c.decision,a=node('div',undefined,'detail');
   contact.onchange=async()=>{contact.disabled=true;try{await persist({session:sessionId,teacher:c.id,contact:contact.value});c.contact=contact.value;updateRowStatus(c);window.refreshPlanner?.();}catch(e){contact.value=c.contact;showError(e);}finally{contact.disabled=false;}};
   save.onclick=async()=>{save.disabled=true;try{const favorite=!c.favorite;await persist({session:sessionId,teacher:c.id,favorite});c.favorite=favorite;save.textContent=c.favorite?'已收藏':'收藏';save.className='button '+(c.favorite?'saved':'secondary');updateRowStatus(c);window.refreshPlanner?.();}catch(e){showError(e);}finally{save.disabled=false;}};
   const outreach=node('button','写联系信','button secondary'),network=node('button','合作论文','text-button');outreach.type=network.type='button';outreach.onclick=()=>window.openOutreach?.(c);network.onclick=()=>window.openNetwork?.(c);
+  outreach.disabled=!!state.review_pending;if(state.review_pending)outreach.title='首批全部复核后开放';
   const official=link('官网主页',c.official_profile);official.className='text-button';
   actions.append(save,contact,outreach,network,official);a.append(actions);
   a.append(node('p',d.reason,'match-reason'));
   if(d.selection_note)a.append(node('p',d.selection_note,'caption'));
-  if(c.related_teachers?.length){const related=node('div',undefined,'related-teachers');related.append(node('h4','共同论文相关导师'));
-    related.append(node('p','依据论文有重叠，本批只占一席；共同署名不代表同一课题组。','caption'));
-    for(const t of c.related_teachers){const b=node('button',`${t.name} · ${t.shared_papers}篇共同论文`,'text-button');b.type='button';b.onclick=()=>window.openNetwork?.(c,t.id);related.append(b);}a.append(related);}
 
   // 接得上 / 要转换
   const bridge=node('div',undefined,'bridge'),left=node('section',undefined,'bridge-fit'),right=node('section',undefined,'bridge-gap');
@@ -89,6 +89,8 @@ function detailFor(c){const d=c.decision,a=node('div',undefined,'detail');
   left.append(ul);right.append(node('h4','需要转换的地方'),node('p',d.gap));
   if(d.evidence==='单篇')right.append(node('p','目前只有一篇论文支持这条连接。','gap-note'));
   bridge.append(left,right);a.append(bridge);
+  if(c.related_teachers?.length){const related=node('div',undefined,'related-teachers');related.append(node('span','依据重叠，本批合并展示：'));
+    for(const t of c.related_teachers){const b=node('button',`${t.name}（${t.shared_papers} 篇共同论文）`,'text-button');b.type='button';b.onclick=()=>window.openNetwork?.(c,t.id);related.append(b);}related.append(node('p','共同署名不代表同一课题组。','caption'));a.append(related);}
   // 论文
   a.append(node('h4','先读这些论文','section-title'));
   const ordered=[...c.judgment_papers].sort((x,y)=>Number(d.read_first.includes(y.key))-Number(d.read_first.includes(x.key)));

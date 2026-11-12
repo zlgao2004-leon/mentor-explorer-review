@@ -1,6 +1,12 @@
 /* 导师探索 · 视觉重做（2026-11-12）
    方向：实验记录本式的工作台。阻焊绿＝接得上，铜色＝要转换。
    取代 base.css / explore.css / review.css。无外部字体、无构建。 */
+#intent-title{font-family:var(--serif)}
+.review-mark{font-size:.75rem;font-weight:600;color:var(--green-deep)}
+.review-mark.pending{color:var(--copper)}
+.review-line{font-size:.85rem;color:var(--ink-2);margin:.5rem 0 1rem}
+.intent-hypothesis[data-excluded="true"]{background:var(--sunk)}
+.intent-hypothesis>.text-button{margin-bottom:.5rem}
 :root{
   --canvas:#EEF1EC;      /* 工作台底色，偏冷的灰绿 */
   --surface:#FFFFFF;
@@ -63,7 +69,7 @@ label{font-size:13px;color:var(--ink-2);display:flex;flex-direction:column;gap:5
 .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .form-grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
 details>summary{cursor:pointer;font-size:14px;color:var(--green-deep);min-height:36px;padding:6px 0}
-.notice{margin:0 0 20px;padding:12px 16px;border-left:3px solid var(--alert);background:#FBEDEC;font-size:14px}
+.notice{margin:0 0 20px;padding:12px 16px;border:1px solid var(--alert);background:#FBEDEC;font-size:14px}
 .working{padding:28px 0;margin-bottom:20px;border-bottom:1px solid var(--line)}
 .working h2{font-family:var(--serif);font-size:22px;font-weight:700}
 
@@ -99,7 +105,7 @@ main{margin-left:var(--rail);padding:34px 40px 40px;min-height:calc(100vh - 60px
 .example strong{display:block;font-family:var(--serif);font-size:17px}
 .example span{display:block;font-size:13px;color:var(--ink-2);margin-top:3px}
 .example:hover{border-color:var(--green)}
-.example[aria-pressed=true]{border-color:var(--green);box-shadow:inset 3px 0 0 var(--green);background:var(--green-tint)}
+.example[aria-pressed=true]{border-color:var(--green);background:var(--green-tint)}
 .field-label,.start-form legend{display:block;font-size:14px;font-weight:600;color:var(--ink);margin:24px 0 8px}
 .school-options{display:flex;flex-wrap:wrap;gap:6px 8px}
 .school-options label{flex-direction:row;align-items:center;gap:7px;font-size:14px;color:var(--ink);padding:6px 12px 6px 10px;border:1px solid var(--line);border-radius:18px;background:var(--surface)}
@@ -280,7 +286,7 @@ main{margin-left:var(--rail);padding:34px 40px 40px;min-height:calc(100vh - 60px
 #draft-body{border:0;padding:0;font-family:var(--serif);font-size:16px;line-height:2;min-height:380px;border-radius:0}
 #draft-body:focus-visible,.letter-sheet input:focus-visible{outline:0;box-shadow:0 2px 0 var(--green)}
 .letter-side{display:grid;gap:12px;position:sticky;top:16px}
-.draft-state{font-size:13px;font-weight:600;color:var(--copper);padding:8px 12px;background:var(--copper-tint);border-left:3px solid var(--copper)}
+.draft-state{font-size:13px;font-weight:600;color:var(--copper);padding:8px 12px;background:var(--copper-tint);border:1px solid var(--copper)}
 .letter-side h3{font-size:14px;font-weight:600}
 #draft-checklist{list-style:disc;padding-left:18px;font-size:13.5px;line-height:1.7;color:var(--ink)}
 #draft-papers p{font-family:var(--latin);font-size:14px;line-height:1.55;padding:4px 0}
@@ -343,7 +349,7 @@ main{margin-left:var(--rail);padding:34px 40px 40px;min-height:calc(100vh - 60px
   .directions{position:static;padding:14px 0 12px;border-bottom:1px solid var(--line)}
   .directions h3,.map-help{padding:0 14px}
   .direction-map{flex-direction:row;overflow-x:auto;gap:8px;padding:2px 14px 6px;scroll-snap-type:x proximity}
-  .direction-option{flex:0 0 210px;border:1px solid var(--line);border-left-width:3px;border-radius:4px;scroll-snap-align:start}
+  .direction-option{flex:0 0 210px;border:1px solid var(--line);border-left-width:1px;border-radius:4px;scroll-snap-align:start}
   .next-row{margin:10px 14px 0;padding-top:10px}
   .roster{border-left:0;min-height:0}
   .batch-heading{padding:14px 14px 8px}
