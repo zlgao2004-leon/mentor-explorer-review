@@ -1,0 +1,24 @@
+{
+  "built_at": "2026-11-16T15:42:31+08:00",
+  "entry": "https://zlgao2004-leon.github.io/mentor-explorer-review/",
+  "backend_origin": "https://lived-reuters-randy-circular.trycloudflare.com",
+  "public_files": [
+    ".gitignore",
+    ".nojekyll",
+    "404.html",
+    "README.md",
+    "entry.css",
+    "index.html"
+  ],
+  "mode": "invite_only",
+  "model_calls": 0,
+  "real_profiles": false,
+  "sha256": {
+    "index.html": "3337967945d959fcaa7b2bfaec51a5da92a549a3c2f67d819dc1bcd6dbca2f94",
+    "entry.css": "e6a35fa3938750577f767259a740b66af7d2013496eb139b0821c34da836df36",
+    ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "404.html": "074073ef436daa0453bd5efb69bed5e3e7bbe6437cc87dfdc4b73ed80fea9f66",
+    ".gitignore": "fa79f6aa4b155afbd21153dee615b479f6d1388af45f20710d49840a295530da",
+    "README.md": "72a50c47a7ca1dade4c5eb32aa1d5c41d80f073c2eb46e2024efa63f351f8b00"
+  }
+}
