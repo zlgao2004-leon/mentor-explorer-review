@@ -1,4 +1,4 @@
-# 导师探索 · 邀请入口
+# 微电集芯 · 导师探索邀请入口
 
 在线地址：https://zlgao2004-leon.github.io/mentor-explorer-review/
 
